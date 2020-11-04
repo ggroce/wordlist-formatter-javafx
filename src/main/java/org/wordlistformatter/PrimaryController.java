@@ -30,6 +30,7 @@ public class PrimaryController implements Initializable {
     @FXML private TableColumn<WordListFile, String> columnWordListFileSize;
     private ObservableList<WordListFile> wordListFiles = FXCollections.observableArrayList();
     private Set<String> filePathSet = new HashSet<>();
+    private File lastUsedDirectory;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -42,16 +43,22 @@ public class PrimaryController implements Initializable {
         });
         //TODO: remove these as implemented
         checkBoxRemoveNonAscii.setDisable(true);
-        checkBoxSetMaxLineLength.setDisable(true);
     }
 
     @FXML
     public void addWordlist() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Add file");
-        //TODO: retain last saved from directory on next filechoose?
-        File file = fileChooser.showOpenDialog(new Stage());
+        File file = null;
+        if (lastUsedDirectory != null) {
+            fileChooser.setInitialDirectory(lastUsedDirectory);
+            System.out.println(lastUsedDirectory.getAbsolutePath());
+            file = fileChooser.showOpenDialog(null);
+        } else {
+            file = fileChooser.showOpenDialog(null);
+        }
         if (file != null) {
+            lastUsedDirectory = file.getParentFile();
             String filePath = file.getAbsolutePath();
             WordListFile wordListFile = new WordListFile(file);
 
@@ -142,7 +149,7 @@ public class PrimaryController implements Initializable {
                         "maximum line length.");
                 return;
             } else {
-                setMaxLineLength();
+                setMaxLineLength(Integer.parseInt(textFieldMaxLineLength.getText()));
             }
         }
     }
@@ -169,8 +176,27 @@ public class PrimaryController implements Initializable {
         }
     }
 
-    private void setMaxLineLength() {
-        //TODO: implement removal of lines longer than N
+    private void setMaxLineLength(int maxLength) {
+        ArrayList<String> wordList = new ArrayList<>();
+
+        try(BufferedReader reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));)
+        {
+            String string = reader.readLine();
+
+            while (string != null) {
+                if (string.length() <= maxLength) {
+                    wordList.add(string);
+                }
+                string = reader.readLine();
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(textFieldFileOutput.getText()));) {
+                for (String line : wordList) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private void removeNonAscii() {

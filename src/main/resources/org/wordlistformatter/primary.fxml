@@ -10,24 +10,30 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="385.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.wordlistformatter.PrimaryController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.wordlistformatter.PrimaryController">
    <children>
-      <TableView fx:id="tableViewWordListFiles" layoutX="12.0" layoutY="14.0" prefHeight="193.0" prefWidth="677.0">
+      <TableView fx:id="tableViewWordListFiles" layoutX="12.0" layoutY="14.0" prefHeight="193.0" prefWidth="677.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="11.0" AnchorPane.topAnchor="14.0">
          <columns>
             <TableColumn fx:id="columnWordListFilePath" prefWidth="588.0" text="File" />
             <TableColumn fx:id="columnWordListFileSize" minWidth="0.0" prefWidth="87.0" text="Size (kb)" />
          </columns>
       </TableView>
-      <VBox layoutX="14.0" layoutY="216.0" prefHeight="60.0" prefWidth="372.0" spacing="5.0">
+      <VBox layoutX="14.0" layoutY="216.0" prefHeight="60.0" prefWidth="372.0" spacing="5.0" AnchorPane.leftAnchor="14.0">
          <children>
             <Button mnemonicParsing="false" onAction="#selectOutputLocation" text="File output location:" />
             <TextField fx:id="textFieldFileOutput" prefHeight="25.0" prefWidth="377.0" />
          </children>
       </VBox>
-      <VBox layoutX="21.0" layoutY="277.0" prefHeight="78.0" prefWidth="230.0" spacing="5.0">
+      <HBox alignment="TOP_RIGHT" layoutX="422.0" layoutY="216.0" prefHeight="33.0" prefWidth="264.0" spacing="20.0" AnchorPane.rightAnchor="14.0">
+         <children>
+            <Button fx:id="buttonAddWordlist" mnemonicParsing="false" onAction="#addWordlist" text="Add wordlist" />
+            <Button fx:id="buttonRemoveWordlist" mnemonicParsing="false" onAction="#removeWordlist" text="Remove wordlist" />
+         </children>
+      </HBox>
+      <VBox layoutX="21.0" layoutY="288.0" prefHeight="109.0" prefWidth="296.0" spacing="5.0" AnchorPane.leftAnchor="21.0">
          <children>
             <CheckBox fx:id="checkBoxSortLines" mnemonicParsing="false" prefHeight="17.0" prefWidth="250.0" text="Sort lines ascending by length" />
-            <CheckBox fx:id="checkBoxRemoveNonAscii" mnemonicParsing="false" prefHeight="17.0" prefWidth="245.0" text="Remove non-Ascii character codes" />
+            <CheckBox fx:id="checkBoxRemoveNonAscii" mnemonicParsing="false" prefHeight="17.0" prefWidth="256.0" text="Remove non-Ascii character codes" />
             <CheckBox fx:id="checkBoxSetMaxLineLength" mnemonicParsing="false" onAction="#selectMaxLineLength" prefHeight="17.0" prefWidth="232.0" text="Set maximum line length" />
             <HBox prefHeight="100.0" prefWidth="200.0">
                <children>
@@ -40,12 +46,6 @@
             </HBox>
          </children>
       </VBox>
-      <HBox layoutX="469.0" layoutY="216.0" prefHeight="33.0" prefWidth="217.0" spacing="20.0">
-         <children>
-            <Button fx:id="buttonAddWordlist" mnemonicParsing="false" onAction="#addWordlist" text="Add wordlist" />
-            <Button fx:id="buttonRemoveWordlist" mnemonicParsing="false" onAction="#removeWordlist" text="Remove wordlist" />
-         </children>
-      </HBox>
-      <Button layoutX="589.0" layoutY="342.0" mnemonicParsing="false" onAction="#onStartSelected" prefWidth="75.0" text="Start" />
+      <Button layoutX="589.0" layoutY="342.0" mnemonicParsing="false" onAction="#onStartSelected" prefWidth="75.0" text="Start" AnchorPane.bottomAnchor="27.0" AnchorPane.rightAnchor="36.0" />
    </children>
 </AnchorPane>
