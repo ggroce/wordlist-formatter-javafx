@@ -1,8 +1,12 @@
 package org.wordlistformatter;
 
-import java.awt.*;
 import java.io.*;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import javafx.collections.FXCollections;
@@ -24,7 +28,6 @@ public class PrimaryController implements Initializable {
     @FXML private TableView<WordListFile> tableViewWordListFiles;
     @FXML private TableColumn<WordListFile, String> columnWordListFilePath;
     @FXML private TableColumn<WordListFile, String> columnWordListFileSize;
-    private Desktop desktop = Desktop.getDesktop();
     private ObservableList<WordListFile> wordListFiles = FXCollections.observableArrayList();
     private Set<String> filePathSet = new HashSet<>();
 
@@ -37,17 +40,20 @@ public class PrimaryController implements Initializable {
                 textFieldMaxLineLength.setText(newValue.replaceAll("[^\\d]", ""));
             }
         });
+        //TODO: remove these as implemented
+        checkBoxRemoveNonAscii.setDisable(true);
+        checkBoxSetMaxLineLength.setDisable(true);
     }
 
     @FXML
     public void addWordlist() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Add file");
+        //TODO: retain last saved from directory on next filechoose?
         File file = fileChooser.showOpenDialog(new Stage());
         if (file != null) {
             String filePath = file.getAbsolutePath();
-            Float fileSize = (float) (file.length() / 1024.0);
-            WordListFile wordListFile = new WordListFile(filePath, fileSize);
+            WordListFile wordListFile = new WordListFile(file);
 
             int indexOfDot = file.getName().lastIndexOf('.');
             if (indexOfDot > 0) {
@@ -80,9 +86,11 @@ public class PrimaryController implements Initializable {
     public void selectOutputLocation() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save to");
-        fileChooser.setInitialFileName("Wordlist.txt");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt"));
+        fileChooser.setInitialFileName("OptimizedWordlist.txt");
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("TXT files (*.txt)",
+                "*.txt"));
         File file = fileChooser.showSaveDialog(new Stage());
+
         if (file != null) {
             String outputPath = file.getAbsolutePath();
             textFieldFileOutput.setText(outputPath);
@@ -102,15 +110,23 @@ public class PrimaryController implements Initializable {
     @FXML
     public void onStartSelected() {
         if (textFieldFileOutput.getText().isEmpty()) {
-            //TODO: do some sort of filepath check here.  Just tryto save file?
             showErrorDialog("Select output path before continuing.");
             return;
         } else if (wordListFiles.isEmpty()) {
             showErrorDialog("Add files to be processed.");
             return;
+        } else {
+            try {
+                Path outputFile = Paths.get(textFieldFileOutput.getText());
+                Files.createFile(outputFile);
+            } catch (IOException e) {
+                showErrorDialog("Output file already exists.  Please choose a " +
+                        "different file name or save location.");
+                e.printStackTrace();
+                return;
+            }
         }
 
-        //combine files before running any selected routines
         combineFiles();
 
         if (checkBoxSortLines.isSelected()) {
@@ -120,7 +136,8 @@ public class PrimaryController implements Initializable {
             removeNonAscii();
         }
         if (checkBoxSetMaxLineLength.isSelected()) {
-            if (textFieldMaxLineLength.getText().isEmpty() || Integer.parseInt(textFieldMaxLineLength.getText()) < 1) {
+            if (textFieldMaxLineLength.getText().isEmpty()
+                    || Integer.parseInt(textFieldMaxLineLength.getText()) < 1) {
                 showErrorDialog("If selecting maximum line length attribute, input desired " +
                         "maximum line length.");
                 return;
@@ -131,9 +148,24 @@ public class PrimaryController implements Initializable {
     }
 
     private void combineFiles() {
-        //TODO: implement combine (append) files
-        for (WordListFile wordListFile : wordListFiles) {
 
+        try (FileOutputStream fileOutputStream = new FileOutputStream(textFieldFileOutput.getText());
+             FileChannel fileChannelOut = fileOutputStream.getChannel();) {
+
+            for (WordListFile wordListFile : wordListFiles) {
+                try (FileInputStream fileInputStream = new FileInputStream(wordListFile.getFile());
+                     FileChannel fileChannelIn = fileInputStream.getChannel();) {
+
+                    fileChannelIn.transferTo(0, fileChannelIn.size(), fileChannelOut);
+                    ByteBuffer newLine = ByteBuffer.wrap("\n".getBytes());
+                    fileChannelOut.write(newLine);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -147,16 +179,12 @@ public class PrimaryController implements Initializable {
 
     private void sortByStringSize() {
         ArrayList<String> wordList = new ArrayList<>();
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
 
-        try {
-            //TODO: gets file from output location after files have been appended
-
-            reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));
+        try(BufferedReader reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));)
+        {
             String string = reader.readLine();
-
             Long startTime = System.nanoTime();
+
             while (string != null) {
                 wordList.add(string);
                 string = reader.readLine();
@@ -167,25 +195,13 @@ public class PrimaryController implements Initializable {
             Long endTime = System.nanoTime();
             System.out.println("Execution time: " + (endTime - startTime) + " ns. ");
 
-            //TODO: need to properly setup output file/location
-            writer = new BufferedWriter(new FileWriter(textFieldFileOutput.getText()));
-            for (String line : wordList) {
-                writer.write(line);
-                writer.newLine();
-            }
-        }
-        catch (IOException e) { e.printStackTrace(); }
-        finally {
-            try {
-                if (reader != null) {
-                    reader.close();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(textFieldFileOutput.getText()));) {
+                for (String line : wordList) {
+                    writer.write(line);
+                    writer.newLine();
                 }
-                if(writer != null) {
-                    writer.close();
-                }
-            }
-            catch (IOException e) { e.printStackTrace(); }
-        }
+            } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private void showErrorDialog(String errorText) {
@@ -194,10 +210,5 @@ public class PrimaryController implements Initializable {
         alert.setHeaderText("Error on Input");
         alert.setContentText(errorText);
         alert.showAndWait();
-    }
-
-    @FXML
-    private void switchToSecondary() throws IOException {
-//        App.setRoot("secondary");
     }
 }

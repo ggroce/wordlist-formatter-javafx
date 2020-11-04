@@ -1,18 +1,23 @@
 package org.wordlistformatter;
 
+import java.io.File;
 import java.text.DecimalFormat;
 
 public class WordListFile {
+    private File file;
     private String filePath;
     private String fileSizeStr;
-    private Float fileSize;
 
-    public WordListFile(String filePath, Float fileSize) {
-        this.filePath = filePath;
-        this.fileSize = fileSize;
+    public WordListFile(File file) {
+        this.file = file;
+        this.filePath = file.getAbsolutePath();
         DecimalFormat df = new DecimalFormat("0.00");
-        this.fileSizeStr = df.format(fileSize);
+        this.fileSizeStr = df.format((float) (file.length() / 1024.0));
     }
+
+    public File getFile() { return file; }
+
+    public void setFile(File file) { this.file = file; }
 
     public String getFilePath() {
         return filePath;
@@ -20,14 +25,6 @@ public class WordListFile {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
-    }
-
-    public Float getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(Float fileSize) {
-        this.fileSize = fileSize;
     }
 
     public String getFileSizeStr() { return fileSizeStr; }
