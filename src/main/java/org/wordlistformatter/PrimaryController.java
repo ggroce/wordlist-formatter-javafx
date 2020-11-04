@@ -28,6 +28,8 @@ public class PrimaryController implements Initializable {
     @FXML private TableView<WordListFile> tableViewWordListFiles;
     @FXML private TableColumn<WordListFile, String> columnWordListFilePath;
     @FXML private TableColumn<WordListFile, String> columnWordListFileSize;
+    @FXML private Label labelStatus;
+    @FXML private ProgressBar progressBar;
     private ObservableList<WordListFile> wordListFiles = FXCollections.observableArrayList();
     private Set<String> filePathSet = new HashSet<>();
     private File lastUsedDirectory;
@@ -43,6 +45,7 @@ public class PrimaryController implements Initializable {
         });
         //TODO: remove these as implemented
         checkBoxRemoveNonAscii.setDisable(true);
+        progressBar.setVisible(false);
     }
 
     @FXML
@@ -152,9 +155,12 @@ public class PrimaryController implements Initializable {
                 setMaxLineLength(Integer.parseInt(textFieldMaxLineLength.getText()));
             }
         }
+        labelStatus.setText("");
     }
 
     private void combineFiles() {
+
+        labelStatus.setText("Combining files...");
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(textFieldFileOutput.getText());
              FileChannel fileChannelOut = fileOutputStream.getChannel();) {
@@ -177,6 +183,7 @@ public class PrimaryController implements Initializable {
     }
 
     private void setMaxLineLength(int maxLength) {
+        labelStatus.setText("Removing lines greater than " + maxLength);
         ArrayList<String> wordList = new ArrayList<>();
 
         try(BufferedReader reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));)
@@ -200,10 +207,12 @@ public class PrimaryController implements Initializable {
     }
 
     private void removeNonAscii() {
+        labelStatus.setText("Removing non-Ascii lines");
         //TODO: implement removal of non-ascii characters
     }
 
     private void sortByStringSize() {
+        labelStatus.setText("Sorting lines by string length");
         ArrayList<String> wordList = new ArrayList<>();
 
         try(BufferedReader reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));)
