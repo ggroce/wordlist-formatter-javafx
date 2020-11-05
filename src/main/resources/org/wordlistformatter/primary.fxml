@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefWidth="700.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.wordlistformatter.PrimaryController">
+<BorderPane prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.wordlistformatter.PrimaryController">
    <center>
       <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="401.0" prefWidth="700.0">
          <children>
@@ -57,10 +57,19 @@
       </AnchorPane>
    </center>
    <bottom>
-      <Pane prefHeight="36.0" prefWidth="700.0" style="-fx-background-color: e3e3e3;" BorderPane.alignment="CENTER">
+      <Pane prefHeight="30.0" prefWidth="700.0" style="-fx-background-color: e3e3e3;" BorderPane.alignment="CENTER">
          <children>
-            <Label fx:id="labelStatus" alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="441.0" layoutY="8.0" prefHeight="21.0" prefWidth="252.0" textAlignment="RIGHT" />
-            <ProgressBar fx:id="progressBar" layoutX="265.0" layoutY="9.0" prefHeight="18.0" prefWidth="170.0" progress="0.0" />
+            <AnchorPane prefHeight="30.0" prefWidth="700.0">
+               <children>
+                  <HBox alignment="CENTER" layoutY="4.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="700.0" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label fx:id="labelResult" prefHeight="21.0" prefWidth="246.0" textAlignment="RIGHT" />
+                        <ProgressBar fx:id="progressBar" prefHeight="18.0" prefWidth="170.0" progress="0.0" />
+                        <Label fx:id="labelStatus" alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="21.0" prefWidth="252.0" textAlignment="RIGHT" />
+                     </children>
+                  </HBox>
+               </children>
+            </AnchorPane>
          </children>
       </Pane>
    </bottom>

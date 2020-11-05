@@ -28,6 +28,7 @@ public class PrimaryController implements Initializable {
     @FXML private TableColumn<WordListFile, String> columnWordListFilePath;
     @FXML private TableColumn<WordListFile, String> columnWordListFileSize;
     @FXML private Label labelStatus;
+    @FXML private Label labelResult;
     @FXML private ProgressBar progressBar;
     private ObservableList<WordListFile> wordListFiles = FXCollections.observableArrayList();
     private Set<String> filePathSet = new HashSet<>();
@@ -117,6 +118,7 @@ public class PrimaryController implements Initializable {
 
     @FXML
     public void onStartSelected() {
+        Path outputFile;
         if (textFieldFileOutput.getText().isEmpty()) {
             showErrorDialog("Select output path before continuing.");
             return;
@@ -125,7 +127,7 @@ public class PrimaryController implements Initializable {
             return;
         } else {
             try {
-                Path outputFile = Paths.get(textFieldFileOutput.getText());
+                outputFile = Paths.get(textFieldFileOutput.getText());
                 Files.createFile(outputFile);
             } catch (IOException e) {
                 showErrorDialog("Output file already exists.  Please choose a " +
@@ -136,6 +138,7 @@ public class PrimaryController implements Initializable {
         }
 
         saveOutFiles();
+//        labelStatus.setText("Processing finished.");
 
 //        if (checkBoxRemoveNonAscii.isSelected()) {
 //            labelStatus.setText("Removing non-Ascii lines");
@@ -210,6 +213,8 @@ public class PrimaryController implements Initializable {
                 setMaxLineLength.setOnSucceeded(e -> {
                     labelStatus.setText("Lines removed");
                     //TODO: next method here
+                    labelResult.setText("Output file size: " +
+                            (new File(textFieldFileOutput.getText()).length() /1024) + "kb");
                 });
                 new Thread(setMaxLineLength).start();
             }
