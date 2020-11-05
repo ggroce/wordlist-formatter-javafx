@@ -2,8 +2,6 @@ package org.wordlistformatter;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,6 +9,7 @@ import java.util.*;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -20,7 +19,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class PrimaryController implements Initializable {
-    @FXML private TextField textFieldFileOutput = new TextField();;
+    @FXML private TextField textFieldFileOutput = new TextField();
     @FXML private TextField textFieldMaxLineLength = new TextField();
     @FXML private CheckBox checkBoxSortLines;
     @FXML private CheckBox checkBoxRemoveNonAscii;
@@ -33,6 +32,7 @@ public class PrimaryController implements Initializable {
     private ObservableList<WordListFile> wordListFiles = FXCollections.observableArrayList();
     private Set<String> filePathSet = new HashSet<>();
     private File lastUsedDirectory;
+    FileFormatter fileFormatter = new FileFormatter();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -55,7 +55,6 @@ public class PrimaryController implements Initializable {
         File file = null;
         if (lastUsedDirectory != null) {
             fileChooser.setInitialDirectory(lastUsedDirectory);
-            System.out.println(lastUsedDirectory.getAbsolutePath());
             file = fileChooser.showOpenDialog(null);
         } else {
             file = fileChooser.showOpenDialog(null);
@@ -68,7 +67,6 @@ public class PrimaryController implements Initializable {
             int indexOfDot = file.getName().lastIndexOf('.');
             if (indexOfDot > 0) {
                 String fileExtension = file.getName().substring(indexOfDot + 1);
-                System.out.println(fileExtension);
                 if (!fileExtension.equals("txt")) {
                     showErrorDialog("File does not have a .txt extension and may not contain a word list.");
                 }
@@ -137,106 +135,85 @@ public class PrimaryController implements Initializable {
             }
         }
 
-        combineFiles();
+        saveOutFiles();
 
+//        if (checkBoxRemoveNonAscii.isSelected()) {
+//            labelStatus.setText("Removing non-Ascii lines");
+//            //NEW THREAD
+//            fileFormatter.removeNonAscii(new File(textFieldFileOutput.getText()));
+//        }
+//        labelStatus.setText("");
+    }
+
+    private void saveOutFiles() {
+        if (wordListFiles.size() > 1) {
+            labelStatus.setText("Combining files...");
+        }else {
+            labelStatus.setText("Preparing file...");
+        }
+        Task<Void> combineFiles = new Task<Void>() {
+            @Override
+            public Void call() {
+                fileFormatter.combineFiles(wordListFiles, new File(textFieldFileOutput.getText()));
+                return null;
+            }
+        };
+        combineFiles.setOnSucceeded(e -> {
+            if (wordListFiles.size() > 1) {
+                labelStatus.setText("Combining files completed");
+            }else {
+                labelStatus.setText("Preparing file completed");
+            }
+            checkSortLines();
+        });
+        new Thread(combineFiles).start();
+    }
+
+    private void checkSortLines() {
         if (checkBoxSortLines.isSelected()) {
-            sortByStringSize();
+            labelStatus.setText("Sorting lines by string length");
+            Task<Void> sortLines = new Task<Void>() {
+                @Override
+                public Void call() {
+                    fileFormatter.sortByStringSize(new File(textFieldFileOutput.getText()));
+                    return null;
+                }
+            };
+            sortLines.setOnSucceeded(e -> {
+                labelStatus.setText("Line sort completed");
+                checkMaxLineLength();
+            });
+            new Thread(sortLines).start();
+        }else {
+            checkMaxLineLength();
         }
-        if (checkBoxRemoveNonAscii.isSelected()) {
-            removeNonAscii();
-        }
+    }
+
+    private void checkMaxLineLength() {
+        //TODO: conditional logic needs help in order to place else onto end and continue
         if (checkBoxSetMaxLineLength.isSelected()) {
             if (textFieldMaxLineLength.getText().isEmpty()
                     || Integer.parseInt(textFieldMaxLineLength.getText()) < 1) {
                 showErrorDialog("If selecting maximum line length attribute, input desired " +
                         "maximum line length.");
-                return;
             } else {
-                setMaxLineLength(Integer.parseInt(textFieldMaxLineLength.getText()));
+                labelStatus.setText("Removing lines greater than " +
+                        Integer.parseInt(textFieldMaxLineLength.getText()));
+                Task<Void> setMaxLineLength = new Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        fileFormatter.setMaxLineLength(Integer.parseInt(textFieldMaxLineLength.getText()),
+                                new File(textFieldFileOutput.getText()));
+                        return null;
+                    }
+                };
+                setMaxLineLength.setOnSucceeded(e -> {
+                    labelStatus.setText("Lines removed");
+                    //TODO: next method here
+                });
+                new Thread(setMaxLineLength).start();
             }
         }
-        labelStatus.setText("");
-    }
-
-    private void combineFiles() {
-
-        labelStatus.setText("Combining files...");
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(textFieldFileOutput.getText());
-             FileChannel fileChannelOut = fileOutputStream.getChannel();) {
-
-            for (WordListFile wordListFile : wordListFiles) {
-                try (FileInputStream fileInputStream = new FileInputStream(wordListFile.getFile());
-                     FileChannel fileChannelIn = fileInputStream.getChannel();) {
-
-                    fileChannelIn.transferTo(0, fileChannelIn.size(), fileChannelOut);
-                    ByteBuffer newLine = ByteBuffer.wrap("\n".getBytes());
-                    fileChannelOut.write(newLine);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void setMaxLineLength(int maxLength) {
-        labelStatus.setText("Removing lines greater than " + maxLength);
-        ArrayList<String> wordList = new ArrayList<>();
-
-        try(BufferedReader reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));)
-        {
-            String string = reader.readLine();
-
-            while (string != null) {
-                if (string.length() <= maxLength) {
-                    wordList.add(string);
-                }
-                string = reader.readLine();
-            }
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(textFieldFileOutput.getText()));) {
-                for (String line : wordList) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            } catch (IOException e) { e.printStackTrace(); }
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    private void removeNonAscii() {
-        labelStatus.setText("Removing non-Ascii lines");
-        //TODO: implement removal of non-ascii characters
-    }
-
-    private void sortByStringSize() {
-        labelStatus.setText("Sorting lines by string length");
-        ArrayList<String> wordList = new ArrayList<>();
-
-        try(BufferedReader reader = new BufferedReader(new FileReader(textFieldFileOutput.getText()));)
-        {
-            String string = reader.readLine();
-            Long startTime = System.nanoTime();
-
-            while (string != null) {
-                wordList.add(string);
-                string = reader.readLine();
-            }
-            Collections.sort(wordList, Comparator.comparingInt(String::length));
-//            Collections.sort(wordList, (a, b)->Integer.compare(a.length(), b.length()));
-
-            Long endTime = System.nanoTime();
-            System.out.println("Execution time: " + (endTime - startTime) + " ns. ");
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(textFieldFileOutput.getText()));) {
-                for (String line : wordList) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            } catch (IOException e) { e.printStackTrace(); }
-        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private void showErrorDialog(String errorText) {
