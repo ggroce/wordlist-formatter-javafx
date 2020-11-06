@@ -13,3 +13,9 @@ the lists from smallest to largest, with the most likely use-cases proposed in t
 former portion of the word list search.  
 
 Created using Java SDK 11.0.9 and JavaFX 11.0.2, using Maven and Intellij
+
+<br>
+<i>WLF, in stages of execution: </i>
+<br>
+<img src="https://user-images.githubusercontent.com/25714007/98423441-3399ef00-2054-11eb-841f-c9e835a6b06f.png" width="700">
+<img src="https://user-images.githubusercontent.com/25714007/98423447-372d7600-2054-11eb-828b-3ceffbf9945f.png" width="700">
