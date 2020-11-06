@@ -16,7 +16,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 public class PrimaryController implements Initializable {
     @FXML private TextField textFieldFileOutput = new TextField();
@@ -27,13 +26,18 @@ public class PrimaryController implements Initializable {
     @FXML private TableView<WordListFile> tableViewWordListFiles;
     @FXML private TableColumn<WordListFile, String> columnWordListFilePath;
     @FXML private TableColumn<WordListFile, String> columnWordListFileSize;
+    @FXML private Button buttonOuputLocation;
+    @FXML private Button buttonAddWordlist;
+    @FXML private Button buttonRemoveWordlist;
+    @FXML private Button buttonStart;
     @FXML private Label labelStatus;
     @FXML private Label labelResult;
     @FXML private ProgressBar progressBar;
     private ObservableList<WordListFile> wordListFiles = FXCollections.observableArrayList();
     private Set<String> filePathSet = new HashSet<>();
     private File lastUsedDirectory;
-    FileFormatter fileFormatter = new FileFormatter();
+    private File outputDirectory;
+    private FileFormatter fileFormatter = new FileFormatter();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -50,16 +54,16 @@ public class PrimaryController implements Initializable {
     }
 
     @FXML
-    public void addWordlist() {
+    private void addWordlist() {
+        File file = null;
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Add file");
-        File file = null;
+
         if (lastUsedDirectory != null) {
             fileChooser.setInitialDirectory(lastUsedDirectory);
-            file = fileChooser.showOpenDialog(null);
-        } else {
-            file = fileChooser.showOpenDialog(null);
         }
+        file = fileChooser.showOpenDialog(null);
+
         if (file != null) {
             lastUsedDirectory = file.getParentFile();
             String filePath = file.getAbsolutePath();
@@ -84,7 +88,7 @@ public class PrimaryController implements Initializable {
     }
 
     @FXML
-    public void removeWordlist() {
+    private void removeWordlist() {
         WordListFile wordListFile = tableViewWordListFiles.getSelectionModel().getSelectedItem();
         if (wordListFile != null) {
             wordListFiles.remove(wordListFile);
@@ -92,22 +96,28 @@ public class PrimaryController implements Initializable {
     }
 
     @FXML
-    public void selectOutputLocation() {
+    private void selectOutputLocation() {
+        File file = null;
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save to");
         fileChooser.setInitialFileName("OptimizedWordlist.txt");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("TXT files (*.txt)",
                 "*.txt"));
-        File file = fileChooser.showSaveDialog(new Stage());
+
+        if (outputDirectory != null) {
+            fileChooser.setInitialDirectory(outputDirectory);
+        }
+        file = fileChooser.showSaveDialog(null);
 
         if (file != null) {
+            outputDirectory = file.getParentFile();
             String outputPath = file.getAbsolutePath();
             textFieldFileOutput.setText(outputPath);
         }
     }
 
     @FXML
-    public void selectMaxLineLength() {
+    private void selectMaxLineLength() {
         if (checkBoxSetMaxLineLength.isSelected()) {
             textFieldMaxLineLength.setDisable(false);
         } else {
@@ -117,13 +127,25 @@ public class PrimaryController implements Initializable {
     }
 
     @FXML
-    public void onStartSelected() {
+    private void checkInputAndStartProcess() {
         Path outputFile;
+        if (checkBoxSetMaxLineLength.isSelected() && (textFieldMaxLineLength.getText().isEmpty()
+                || Integer.parseInt(textFieldMaxLineLength.getText()) < 1)) {
+            showErrorDialog("If selecting maximum line length attribute, input desired " +
+                    "maximum line length.");
+            return;
+        }
+
+        if (wordListFiles.isEmpty()) {
+            showErrorDialog("Add files to be processed.");
+            return;
+        }
+
+        // Check field for valid path.  Check if file exists, if it does, confirm overwrite.
+        // Don't create file until execution proceeds.
+
         if (textFieldFileOutput.getText().isEmpty()) {
             showErrorDialog("Select output path before continuing.");
-            return;
-        } else if (wordListFiles.isEmpty()) {
-            showErrorDialog("Add files to be processed.");
             return;
         } else {
             try {
@@ -137,8 +159,11 @@ public class PrimaryController implements Initializable {
             }
         }
 
-        saveOutFiles();
-//        labelStatus.setText("Processing finished.");
+        labelResult.setText("");
+        progressBar.setVisible(true);
+        progressBar.setProgress(-1);
+        disableControls();
+        combineFilesAndSave();
 
 //        if (checkBoxRemoveNonAscii.isSelected()) {
 //            labelStatus.setText("Removing non-Ascii lines");
@@ -148,7 +173,7 @@ public class PrimaryController implements Initializable {
 //        labelStatus.setText("");
     }
 
-    private void saveOutFiles() {
+    private void combineFilesAndSave() {
         if (wordListFiles.size() > 1) {
             labelStatus.setText("Combining files...");
         }else {
@@ -187,38 +212,62 @@ public class PrimaryController implements Initializable {
                 checkMaxLineLength();
             });
             new Thread(sortLines).start();
-        }else {
+        } else {
             checkMaxLineLength();
         }
     }
 
     private void checkMaxLineLength() {
-        //TODO: conditional logic needs help in order to place else onto end and continue
         if (checkBoxSetMaxLineLength.isSelected()) {
-            if (textFieldMaxLineLength.getText().isEmpty()
-                    || Integer.parseInt(textFieldMaxLineLength.getText()) < 1) {
-                showErrorDialog("If selecting maximum line length attribute, input desired " +
-                        "maximum line length.");
-            } else {
-                labelStatus.setText("Removing lines greater than " +
-                        Integer.parseInt(textFieldMaxLineLength.getText()));
-                Task<Void> setMaxLineLength = new Task<Void>() {
-                    @Override
-                    protected Void call() throws Exception {
-                        fileFormatter.setMaxLineLength(Integer.parseInt(textFieldMaxLineLength.getText()),
-                                new File(textFieldFileOutput.getText()));
-                        return null;
-                    }
-                };
-                setMaxLineLength.setOnSucceeded(e -> {
-                    labelStatus.setText("Lines removed");
-                    //TODO: next method here
-                    labelResult.setText("Output file size: " +
-                            (new File(textFieldFileOutput.getText()).length() /1024) + "kb");
-                });
-                new Thread(setMaxLineLength).start();
-            }
+            labelStatus.setText("Removing lines greater than " +
+                    Integer.parseInt(textFieldMaxLineLength.getText()));
+            Task<Void> setMaxLineLength = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    fileFormatter.setMaxLineLength(Integer.parseInt(textFieldMaxLineLength.getText()),
+                            new File(textFieldFileOutput.getText()));
+                    return null;
+                }
+            };
+            setMaxLineLength.setOnSucceeded(e -> {
+                labelStatus.setText("Lines removed");
+                //TODO: next method here
+                showOutputAndResetControls();
+            });
+            new Thread(setMaxLineLength).start();
+        } else {
+            showOutputAndResetControls();
         }
+    }
+
+    private void disableControls() {
+        buttonStart.setDisable(true);
+        buttonOuputLocation.setDisable(true);
+        buttonAddWordlist.setDisable(true);
+        buttonRemoveWordlist.setDisable(true);
+        textFieldFileOutput.setDisable(true);
+        textFieldMaxLineLength.setDisable(true);
+        checkBoxSortLines.setDisable(true);
+        checkBoxSetMaxLineLength.setDisable(true);
+//        checkBoxRemoveNonAscii.setDisable(true);
+    }
+
+    private void showOutputAndResetControls() {
+        labelResult.setText("Output file size: " +
+                (new File(textFieldFileOutput.getText()).length() /1024) + "kb");
+        progressBar.setProgress(0);
+        progressBar.setVisible(false);
+        labelStatus.setText("Processing complete");
+        buttonStart.setDisable(false);
+        buttonOuputLocation.setDisable(false);
+        buttonAddWordlist.setDisable(false);
+        buttonRemoveWordlist.setDisable(false);
+        textFieldFileOutput.setDisable(false);
+        textFieldMaxLineLength.setDisable(false);
+        checkBoxSortLines.setDisable(false);
+//        checkBoxRemoveNonAscii.setDisable(false);
+        checkBoxSetMaxLineLength.setDisable(false);
+
     }
 
     private void showErrorDialog(String errorText) {
