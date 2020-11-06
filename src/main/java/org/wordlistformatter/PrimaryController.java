@@ -92,6 +92,7 @@ public class PrimaryController implements Initializable {
         WordListFile wordListFile = tableViewWordListFiles.getSelectionModel().getSelectedItem();
         if (wordListFile != null) {
             wordListFiles.remove(wordListFile);
+            filePathSet.remove(wordListFile.getFilePath());
         }
     }
 
