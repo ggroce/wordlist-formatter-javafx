@@ -5,9 +5,7 @@ import javafx.collections.ObservableList;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 
 public class FileFormatter {
 
@@ -45,6 +43,27 @@ public class FileFormatter {
 
             Long endTime = System.nanoTime();
             System.out.println("Execution time: " + (endTime - startTime) + " ns. ");
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.getAbsoluteFile()))) {
+                for (String line : wordList) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    public void removeDuplicates(File file) {
+        Set<String> wordList = new LinkedHashSet<>();
+
+        try(BufferedReader reader = new BufferedReader(new FileReader(file.getAbsoluteFile())))
+        {
+            String string = reader.readLine();
+
+            while (string != null) {
+                wordList.add(string);
+                string = reader.readLine();
+            }
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.getAbsoluteFile()))) {
                 for (String line : wordList) {

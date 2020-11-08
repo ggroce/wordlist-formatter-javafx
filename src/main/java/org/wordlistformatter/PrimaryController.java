@@ -23,6 +23,7 @@ public class PrimaryController implements Initializable {
     @FXML private CheckBox checkBoxSortLines;
     @FXML private CheckBox checkBoxRemoveNonAscii;
     @FXML private CheckBox checkBoxSetMaxLineLength;
+    @FXML private CheckBox checkBoxRemoveDuplicates;
     @FXML private TableView<WordListFile> tableViewWordListFiles;
     @FXML private TableColumn<WordListFile, String> columnWordListFilePath;
     @FXML private TableColumn<WordListFile, String> columnWordListFileSize;
@@ -232,10 +233,30 @@ public class PrimaryController implements Initializable {
             };
             setMaxLineLength.setOnSucceeded(e -> {
                 labelStatus.setText("Lines removed");
+                checkRemoveDuplicates();
+            });
+            new Thread(setMaxLineLength).start();
+        } else {
+            checkRemoveDuplicates();
+        }
+    }
+
+    private void checkRemoveDuplicates() {
+        if (checkBoxRemoveDuplicates.isSelected()) {
+            labelStatus.setText("Removing duplicates");
+            Task<Void> removeDuplicates = new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    fileFormatter.removeDuplicates(new File(textFieldFileOutput.getText()));
+                    return null;
+                }
+            };
+            removeDuplicates.setOnSucceeded(e -> {
+                labelStatus.setText("Duplicates removed");
                 //TODO: next method here
                 showOutputAndResetControls();
             });
-            new Thread(setMaxLineLength).start();
+            new Thread(removeDuplicates).start();
         } else {
             showOutputAndResetControls();
         }
@@ -250,6 +271,7 @@ public class PrimaryController implements Initializable {
         textFieldMaxLineLength.setDisable(true);
         checkBoxSortLines.setDisable(true);
         checkBoxSetMaxLineLength.setDisable(true);
+        checkBoxRemoveDuplicates.setDisable(true);
 //        checkBoxRemoveNonAscii.setDisable(true);
     }
 
@@ -266,9 +288,9 @@ public class PrimaryController implements Initializable {
         textFieldFileOutput.setDisable(false);
         textFieldMaxLineLength.setDisable(false);
         checkBoxSortLines.setDisable(false);
-//        checkBoxRemoveNonAscii.setDisable(false);
         checkBoxSetMaxLineLength.setDisable(false);
-
+        checkBoxRemoveDuplicates.setDisable(false);
+//        checkBoxRemoveNonAscii.setDisable(false);
     }
 
     private void showErrorDialog(String errorText) {

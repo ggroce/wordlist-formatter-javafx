@@ -10,11 +10,14 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefWidth="700.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.wordlistformatter.PrimaryController">
+<BorderPane prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.wordlistformatter.PrimaryController">
    <center>
       <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="401.0" prefWidth="700.0">
          <children>
@@ -36,12 +39,20 @@
                   <Button fx:id="buttonRemoveWordlist" mnemonicParsing="false" onAction="#removeWordlist" text="Remove wordlist" />
                </children>
             </HBox>
-            <VBox layoutX="21.0" layoutY="288.0" prefHeight="109.0" prefWidth="353.0" spacing="5.0" AnchorPane.leftAnchor="21.0">
+            <GridPane layoutX="14.0" layoutY="290.0" prefHeight="90.0" prefWidth="547.0">
+              <columnConstraints>
+                <ColumnConstraints maxWidth="267.0" minWidth="10.0" prefWidth="244.0" />
+                <ColumnConstraints maxWidth="375.0" minWidth="10.0" prefWidth="293.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
                <children>
                   <CheckBox fx:id="checkBoxSortLines" mnemonicParsing="false" prefHeight="17.0" prefWidth="250.0" text="Sort lines ascending by length" />
-                  <CheckBox fx:id="checkBoxRemoveNonAscii" mnemonicParsing="false" prefHeight="21.0" prefWidth="326.0" text="Remove lines with non-Ascii character codes" />
-                  <CheckBox fx:id="checkBoxSetMaxLineLength" mnemonicParsing="false" onAction="#selectMaxLineLength" prefHeight="17.0" prefWidth="232.0" text="Set maximum line length" />
-                  <HBox prefHeight="100.0" prefWidth="200.0">
+                  <CheckBox fx:id="checkBoxSetMaxLineLength" mnemonicParsing="false" onAction="#selectMaxLineLength" prefHeight="17.0" prefWidth="232.0" text="Set maximum line length" GridPane.rowIndex="1" />
+                  <HBox GridPane.rowIndex="2">
                      <children>
                         <TextField fx:id="textFieldMaxLineLength" disable="true" prefHeight="25.0" prefWidth="69.0">
                            <HBox.margin>
@@ -50,9 +61,11 @@
                         </TextField>
                      </children>
                   </HBox>
+                  <CheckBox fx:id="checkBoxRemoveNonAscii" mnemonicParsing="false" prefHeight="21.0" prefWidth="326.0" text="Remove lines with non-Ascii char codes" GridPane.columnIndex="1" />
+                  <CheckBox fx:id="checkBoxRemoveDuplicates" mnemonicParsing="false" selected="true" text="Remove duplicates" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                </children>
-            </VBox>
-            <Button fx:id="buttonStart" layoutX="589.0" layoutY="342.0" mnemonicParsing="false" onAction="#checkInputAndStartProcess" prefWidth="75.0" text="Start" AnchorPane.bottomAnchor="27.0" AnchorPane.rightAnchor="36.0" />
+            </GridPane>
+            <Button fx:id="buttonStart" layoutX="605.0" layoutY="349.0" mnemonicParsing="false" onAction="#checkInputAndStartProcess" prefWidth="75.0" text="Start" AnchorPane.bottomAnchor="21.0" AnchorPane.rightAnchor="20.0" />
          </children>
       </AnchorPane>
    </center>
