@@ -12,7 +12,7 @@ that in most all cases could not possibly be useable passwords, and again, sorti
 the lists from smallest to largest, with the most likely use-cases proposed in the 
 former portion of the word list search.  
 <br>
-<a href="https://github.com/ggroce/WordListFormatter/releases/download/v0.9-beta/WordListFormatter-v.09-beta_JRE-Bundle.zip"><img src="https://img.shields.io/badge/Download-contains%20bundled%20JRE-green"></a>
+<a href="https://github.com/ggroce/WordListFormatter/releases/download/v0.9-beta/WordListFormatter-v.09-beta_JRE-Bundle.zip"><img src="https://img.shields.io/github/v/release/ggroce/wordlistformatter?color=green&include_prereleases&label=Download%20%28bundled%20with%20JRE%2011.0.9%29"></a>
 
 Created using Java SDK 11.0.9 and JavaFX 11.0.2, using Maven and Intellij
 
