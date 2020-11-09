@@ -16,6 +16,7 @@ public class App extends Application {
         scene = new Scene(loadFXML("primary"));
         stage.setScene(scene);
         stage.setResizable(false);
+        stage.setTitle("Wordlist Formatter");
         stage.show();
     }
 

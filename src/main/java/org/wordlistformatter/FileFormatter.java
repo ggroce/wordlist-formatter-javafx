@@ -5,6 +5,8 @@ import javafx.collections.ObservableList;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class FileFormatter {
@@ -97,7 +99,26 @@ public class FileFormatter {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public void removeNonAscii(File file) {
-        //TODO: implement removal of non-ascii characters
+    public void removeNonPrintable(File file) {
+        ArrayList<String> wordList = new ArrayList<>();
+
+        try(BufferedReader reader = new BufferedReader(new FileReader(file.getAbsoluteFile()));)
+        {
+            String string = reader.readLine();
+
+            while (string != null) {
+                if (string.matches("\\A\\p{Print}+\\z")) {
+                    wordList.add(string);
+                }
+                string = reader.readLine();
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.getAbsoluteFile()))) {
+                for (String line : wordList) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }
