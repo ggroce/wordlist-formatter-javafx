@@ -1,5 +1,5 @@
 # WordListFormatter
-Word list formatting program promoting time efficiency through better formatting.  
+Word list optimization program promoting time efficiency through better formatting.  
 
 Combines multiple word lists, and provides the options of optimizing the resulting 
 combination through sorting the word list lines from smallest to largest, removing 
