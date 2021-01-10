@@ -1,4 +1,5 @@
 # WordListFormatter
+<img src="https://img.shields.io/github/license/ggroce/WordListFormatter">
 Word list optimization program promoting time efficiency through better formatting.  
 
 Combines multiple word lists, and provides the options of optimizing the resulting 
